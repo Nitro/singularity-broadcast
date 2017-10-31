@@ -1,4 +1,4 @@
-# git !
+# Singularity web-hook broadcast
 
 Process Singularity events and sends a custom messages to Slack and a Deploy Report to NewRelic
 
@@ -13,8 +13,8 @@ Note: Project implemented using `scala cats` and `scala-effect` just to experime
 
 ```
 sbt docker:publish
-nmesos release singularity-broadcast -e dev -t 0.0.5-SNAPSHOT--force --dryrun false
-nmesos release singularity-broadcast -e prod -t 0.0.5-SNAPSHOT--force --dryrun false
+nmesos release singularity-broadcast -e dev -t 0.0.6-SNAPSHOT --dryrun false
+nmesos release singularity-broadcast -e prod -t 0.0.6-SNAPSHOT --dryrun false
 ```
 
 # Register the WebHook

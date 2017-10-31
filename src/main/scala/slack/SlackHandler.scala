@@ -9,7 +9,6 @@ import singularity._
 import util.JsonUtil._
 import util.{HttpIO, QuoteRandom}
 
-
 /**
   * https://api.slack.com/docs/message-formatting
   */
@@ -26,8 +25,21 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
 
   }
 
-  def send(message: Json): IO[Unit] = {
-    io.postJsonIgnoreResult(conf.slack.url, message).map(_ => ())
+  def send(deployEvent: DeployEvent, message: Json): IO[Unit] = {
+    // Send only finished deployments to the important channel (#allops)
+    val targetChannel = deployEvent match {
+      case DeployFinished(info) if info.isProd => conf.slack.channel.important
+      case DeployStarting(_) | DeployFinished(_) | IgnoredEvent =>
+        conf.slack.channel.info
+    }
+    val msgWithChannel = message.deepMerge(json {
+      s"""{
+          "channel": "$targetChannel"
+          }
+        """
+    })
+
+    io.postJsonIgnoreResult(conf.slack.url, msgWithChannel).map(_ => ())
   }
 
   def buildMessage(deploy: DeployEvent,
@@ -36,15 +48,22 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
       case DeployStarting(info) =>
         json {
           s"""{
-          "text": "Deploying ${info.prettyServiceName} to ${info.prettyEnvironment}"
+                 "text": "Deploying ${info.prettyServiceName} to ${info.prettyEnvironment}"
           }
            """
         }.deepMerge(BaseJson)
           .deepMerge(attachments(info, newRelicDeployId))
+      case DeployFinished(info) if info.isProd =>
+          json {
+          s"""{
+                "text": "${info.prettyStatus} deploying <${info.singularityRequestUrl}|${info.serviceName}:${info.newImageTag}> to ${info.prettyEnvironment}, info at <${conf.slack.channel.infoLink}|${conf.slack.channel.info}>"
+          }
+          """
+          }.deepMerge(BaseJson)
       case DeployFinished(info) =>
         json {
           s"""{
-          "text": "${info.prettyStatus} deploying <${info.singularityRequestUrl}|${info.serviceName}:${info.newImageTag}> to ${info.prettyEnvironment}"
+                "text": "${info.prettyStatus} deploying <${info.singularityRequestUrl}|${info.serviceName}:${info.newImageTag}> to ${info.prettyEnvironment}"
           }
            """
         }.deepMerge(BaseJson)
@@ -65,7 +84,7 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
     }
 
     val gitHubLink = if (info.isTagAValidVersion) {
-      s"<https://github.com/Nitro/${info.gitHubRepoName}/releases/tag/v${info.newImageTag}|(${info.newImageTag}>"
+      s"<https://github.com/Nitro/${info.gitHubRepoName}/releases/tag/v${info.newImageTag}|${info.newImageTag}>"
     } else {
       s"${info.newImageTag}"
     }
@@ -76,7 +95,7 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
     val versionField = Some(s"""
          |{
          |  "title": "Version",
-         |  "value": "gitHubLink $dockerLink",
+         |  "value": "$gitHubLink $dockerLink",
          |  "short": true
          |}
        """.stripMargin)
@@ -166,9 +185,9 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
     val changes = info.diffEnvironmentConf.map {
       case DiffEnvironmentConf(Added, key, value, _) => s" ➕ $key: `$value` "
       case DiffEnvironmentConf(Removed, key, value, _) =>
-        s" ❌ $key: ~`$value`~ "
+        s" ❌ $key: ~'$value'~ "
       case DiffEnvironmentConf(Changed, key, value, Some(oldValue)) =>
-        s"""❗ $key: ~`$oldValue`~ \\n  ➝ `$value`""".stripMargin
+        s"""❗ $key: ~'$oldValue'~ \\n  ➝ `$value`""".stripMargin
     }
 
     val envInfo =

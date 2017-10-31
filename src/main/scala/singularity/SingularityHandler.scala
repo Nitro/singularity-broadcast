@@ -96,7 +96,7 @@ class SingularityHandlerImpl(val conf: SingularityConf, val httpIO: HttpIO)
     val diffEnvironmentConf = diffEnvironment(newEnv, previousEnv)
 
     val newRelicAppName =
-      newEnv.filterKeys(_ == "NEW_RELIC_APP_NAME").values.headOption
+      newEnv.filterKeys(_.contains("NEW_RELIC_APP_NAME")).values.headOption
 
     DeployInfo(
       serviceName = docker.serviceName,
