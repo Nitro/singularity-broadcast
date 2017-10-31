@@ -1,22 +1,14 @@
-import util.DefaultHttpIO
-import cats.data.EitherT
-import cats.effect._
-import org.http4s._
-
-import org.http4s.dsl.io._
 import cats.effect.IO
-import cats.effect.LiftIO._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import conf.{Conf, SingularityConf, SlackConfig}
-
-import io.circe._
-import io.circe.literal._
+import conf.Conf
+import util.Cache
 import io.circe.generic.auto._
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import newrelic.{NewRelicHandlerImpl}
-import org.http4s._
+import newrelic.NewRelicHandlerImpl
+import util.DefaultHttpIO
+import org.http4s.{util, _}
 import org.http4s.circe._
 import org.http4s.dsl.io.{Ok, _}
 import singularity._
@@ -52,7 +44,7 @@ object DeployService extends Utils {
         newRelicDeployId <- newRelic.send(richEvent)
 
         slackMsg <- IO(slack.buildMessage(richEvent, newRelicDeployId))
-        _ <- slack.send(slackMsg)
+        _ <- slack.send(richEvent, slackMsg)
 
       } yield {
         ()
@@ -89,19 +81,29 @@ trait Utils extends LazyLogging {
 
   val TooOld = 10.minutes
 
-  def shouldSkip(deployUpdate: SingularityDeployUpdate): Boolean = {
-    if (deployUpdate.deployMarker.requestId.contains("singularity_broadcast")) {
-      logger.info(s"Ignoring ${deployUpdate.deployMarker.requestId}")
+  val ToSkip = Seq("tweety", "singularity_broadcast", "cadvisor")
+
+  def shouldSkip(event: SingularityDeployUpdate): Boolean = {
+    val deployId = event.deployMarker.deployId
+    val requestId = event.deployMarker.requestId
+    val now = System.currentTimeMillis()
+    logger.info(s"Evaluating event: ${event.eventType}, requestId: $requestId, deployId: $deployId")
+    if (Cache.isAlreadySeen(event)) {
+      logger.info(s"Already processed deploy ${event.eventType } for deployId: '$deployId'. Ignoring $requestId")
       true
-    } else if (System
-                 .currentTimeMillis() - deployUpdate.deployMarker.timestamp > TooOld.toMillis) {
+    } else if (ToSkip.exists(contain => requestId.toLowerCase().contains(contain))) {
+      logger.info(s"Ignoring $requestId (in toSkip list)")
+      true
+    } else if (now - event.deployMarker.timestamp > TooOld.toMillis) {
       logger.info(
-        s"Dropping ${deployUpdate.deployMarker.requestId} for been too old. now: ${System
-          .currentTimeMillis()}, deploy timestamp: ${deployUpdate.deployMarker.timestamp}")
+        s"Dropping deployId:$deployId, requestId: $requestId for been too old. now: $now, deploy timestamp: ${event.deployMarker.timestamp}")
       true
     } else {
+      Cache.remember(event)
       false
     }
   }
 
 }
+
+

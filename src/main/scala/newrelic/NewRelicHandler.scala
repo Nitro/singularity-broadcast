@@ -57,7 +57,7 @@ case class NewRelicHandlerImpl(val conf: NewRelicConf, val httpIO: HttpIO) exten
              |{
              |  "deployment": {
              |    "revision": "${info.newImageTag}",
-             |    "description": "Starting ${info.newDeployId}",
+             |    "description": "Starting DeployId: ${info.newDeployId}",
              |    "user": "Singularity"
              |  }
              |}
