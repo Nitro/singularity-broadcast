@@ -25,13 +25,20 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
 
   }
 
+  def toChannelList(deployEvent: DeployEvent):Seq[String] = deployEvent match {
+    case DeployFinished(info) if info.isProd => Seq(conf.slack.channel.important,conf.slack.channel.info)
+    case DeployStarting(_) | DeployFinished(_) | IgnoredEvent =>
+      Seq(conf.slack.channel.info)
+  }
+
+
   def send(deployEvent: DeployEvent, message: Json): IO[Unit] = {
-    // Send only finished deployments to the important channel (#allops)
-    val targetChannel = deployEvent match {
-      case DeployFinished(info) if info.isProd => conf.slack.channel.important
-      case DeployStarting(_) | DeployFinished(_) | IgnoredEvent =>
-        conf.slack.channel.info
-    }
+    val channels =  toChannelList(deployEvent)
+    val sendsIO =  channels.map(channel => send(deployEvent, message,channel ))
+    IO(sendsIO.foreach(_.unsafeRunSync())) // TODO rewrite it
+  }
+
+  def send(deployEvent: DeployEvent, message: Json, targetChannel: String): IO[Unit] = {
     val msgWithChannel = message.deepMerge(json {
       s"""{
           "channel": "$targetChannel"
@@ -187,7 +194,7 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
       case DiffEnvironmentConf(Removed, key, value, _) =>
         s" ❌ $key: ~'$value'~ "
       case DiffEnvironmentConf(Changed, key, value, Some(oldValue)) =>
-        s"""❗ $key: ~'$oldValue'~ \\n  ➝ `$value`""".stripMargin
+        s"""❗ $key: ~'$oldValue'~  ➝ `$value`""".stripMargin
     }
 
     val envInfo =

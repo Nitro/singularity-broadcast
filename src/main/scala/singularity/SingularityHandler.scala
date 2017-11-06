@@ -2,13 +2,14 @@ package singularity
 
 import java.util.Date
 
-import scala.concurrent.duration._
 import cats.effect.IO
 import com.typesafe.scalalogging.LazyLogging
 import conf.SingularityConf
 import io.circe.generic.auto._
 import org.ocpsoft.prettytime.PrettyTime
 import util.HttpIO
+
+import scala.concurrent.duration._
 
 trait SingularityHandler {
   def fetchInfo(event: SingularityDeployUpdate): IO[DeployEvent]
@@ -191,11 +192,14 @@ class SingularityHandlerImpl(val conf: SingularityConf, val httpIO: HttpIO)
       }
 
     val changes = {
-      val merged = newEnv
-        .filterKeys(key => intersectKeys.contains(key))
-        .toSeq ++ previousEnv
-        .filterKeys(key => intersectKeys.contains(key))
-        .toSeq
+      val merged = {
+        val newIntersect =
+          newEnv.filterKeys(key => intersectKeys.contains(key)).toSeq
+        val oldIntersect =
+          previousEnv.filterKeys(key => intersectKeys.contains(key)).toSeq
+        newIntersect ++ oldIntersect
+      }
+
       val groupedByKey = merged.groupBy(_._1).mapValues(_.map(_._2).toList)
       groupedByKey.collect {
         case (key, newValue :: previousValue :: Nil)
