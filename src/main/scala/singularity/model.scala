@@ -1,7 +1,5 @@
 package singularity
 
-
-
 case class SingularityContainerInfo(docker: SingularityDockerInfo)
 
 case class SingularityDeploy(
@@ -35,7 +33,6 @@ case class SingularityDockerInfo(
       .filter(_.key == "label")
       .find(_.value.startsWith(EnvironmentPattern))
       .map(_.value.drop(EnvironmentPattern.size))
-
 
 }
 
@@ -105,7 +102,8 @@ case class DeployInfo(serviceName: String,
   def prettyServiceName =
     serviceName.replaceAll("_", " ").replaceAll("-", " ").toLowerCase.capitalize
 
-  def prettyEnvironment = environment.getOrElse("<unknown>").toLowerCase.capitalize
+  def prettyEnvironment =
+    environment.getOrElse("<unknown>").toLowerCase.capitalize
 
   def prettyStatus = {
     val statusText = status.toLowerCase.capitalize
@@ -119,7 +117,8 @@ case class DeployInfo(serviceName: String,
     * user-service-server => https://github.com/Nitro/user-service
     *
     */
-  val CustomRemoveToGithub = Seq("-my-account", "-server", "-admin")
+  val CustomRemoveToGithub =
+    Seq("-my-account", "-server", "-admin", "-consumer")
 
   /**
     * Guess github repo
