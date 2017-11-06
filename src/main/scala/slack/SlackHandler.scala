@@ -90,7 +90,7 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
        """.stripMargin
     }
 
-    val gitHubLink = if (info.isTagAValidVersion) {
+    val gitHubLink = if (info.isTagValidVersion) {
       s"<https://github.com/Nitro/${info.gitHubRepoName}/releases/tag/v${info.newImageTag}|${info.newImageTag}>"
     } else {
       s"${info.newImageTag}"
@@ -133,16 +133,24 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
          |}
        """.stripMargin)
 
+    val prodDiff =  if (info.isTagValidVersion && !info.isProd) {
+      info.prodImageTag.map(prodVersion =>
+        s"""( <https://github.com/Nitro/${info.gitHubRepoName}/compare/v${prodVersion}...v${info.newImageTag}|${prodVersion}...${info.newImageTag}> )""".stripMargin)
+        .getOrElse("")
+    } else {
+      ""
+    }
+
     val prodLastDeployTime = info.prodLastDeployTime.map(time => s"""
          |{
          |  "title": "Prod haven't been update since",
-         |  "value": "${if (info.warningProdLastDeploy) "⚠" else "✅"} $time",
+         |  "value": "${if (info.warningProdLastDeploy) "⚠" else "✅"} $time $prodDiff",
          |  "short": true
          |}
        """.stripMargin)
 
     val versionDiff = info.previousImageTag.flatMap { previousImageTag =>
-      if (!info.isTagAValidVersion) {
+      if (!info.isTagValidVersion) {
         None
       } else {
         Some(
