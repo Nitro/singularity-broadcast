@@ -131,7 +131,7 @@ case class DeployInfo(serviceName: String,
   }
 
   // :( Some docker tags doesn't match with a valid version (released on Github)
-  def isTagAValidVersion = newImageTag.matches("(\\d+)\\.(\\d+)\\.(\\d+).*")
+  def isTagValidVersion = newImageTag.matches("(\\d+)\\.(\\d+)\\.(\\d+).*")
 
   def isProd = environment.exists(_.toLowerCase() == "prod")
 
