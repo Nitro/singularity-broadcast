@@ -125,6 +125,14 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
          |}
        """.stripMargin)
 
+    val prodDiff =  if (info.isTagValidVersion && !info.isProd) {
+      info.prodImageTag.map(prodVersion =>
+        s"""(<https://github.com/Nitro/${info.gitHubRepoName}/compare/v${prodVersion}...v${info.newImageTag}|diff>)""".stripMargin)
+        .getOrElse("")
+    } else {
+      ""
+    }
+
     val prodVersion = info.prodImageTag.map(prodVersion => s"""
          |{
          |  "title": "Version in Prod",
@@ -133,17 +141,9 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
          |}
        """.stripMargin)
 
-    val prodDiff =  if (info.isTagValidVersion && !info.isProd) {
-      info.prodImageTag.map(prodVersion =>
-        s"""( <https://github.com/Nitro/${info.gitHubRepoName}/compare/v${prodVersion}...v${info.newImageTag}|${prodVersion}...${info.newImageTag}> )""".stripMargin)
-        .getOrElse("")
-    } else {
-      ""
-    }
-
     val prodLastDeployTime = info.prodLastDeployTime.map(time => s"""
          |{
-         |  "title": "Prod haven't been update since",
+         |  "title": "Prod hasn’t been updated since",
          |  "value": "${if (info.warningProdLastDeploy) "⚠" else "✅"} $time $prodDiff",
          |  "short": true
          |}
