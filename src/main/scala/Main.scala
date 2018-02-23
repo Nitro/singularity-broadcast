@@ -1,5 +1,6 @@
 import cats.effect.IO
 import org.http4s.server.blaze.BlazeBuilder
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends App {
 

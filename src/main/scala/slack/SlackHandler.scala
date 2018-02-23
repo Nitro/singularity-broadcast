@@ -197,7 +197,7 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
          |}
       """.stripMargin
 
-    val changes = info.diffEnvironmentConf.map {
+    val changes = info.diffEnvironmentConf.map(hideCredentials).map {
       case DiffEnvironmentConf(Added, key, value, _) => s" ➕ $key: `$value` "
       case DiffEnvironmentConf(Removed, key, value, _) =>
         s" ❌ $key: ~'$value'~ "
@@ -228,6 +228,23 @@ class SlackHandlerImpl(conf: Conf, io: HttpIO) extends LazyLogging {
 
     json {
       s"""{"attachments": [$attachments]}"""
+    }
+  }
+
+  def isPass(key: String) = {
+    key.toUpperCase().contains("PASS") || key.toUpperCase().contains("SECRET") || key.contains("CREDENTIAL")
+  }
+
+  // password -> passxxxx
+  def maskPass(value: String) = {
+    value.take(value.size/2) +  ("x" * (value.size/2))
+  }
+
+  def hideCredentials(env: DiffEnvironmentConf): DiffEnvironmentConf = {
+    if ( isPass(env.key) && !env.value.startsWith("vault://")) {
+      env.copy(value = maskPass(env.value))
+    } else {
+      env
     }
   }
 }
