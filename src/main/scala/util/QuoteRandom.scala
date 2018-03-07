@@ -76,11 +76,36 @@ object QuoteRandom {
     "There is only one person standing in a Chuck Norris scrum meeting"
   )
 
+  val UnixQuotes = Seq(
+    "Make each program do one thing well",
+    "To do a new job, build afresh rather than complicate old programs by adding new features",
+    "Expect the output of every program to become the input to another, as yet unknown, program",
+    "Don't clutter output with extraneous information",
+    "Avoid stringently columnar or binary input formats",
+    "Don't insist on interactive input",
+    "Design and build software, even operating systems, to be tried early, ideally within weeks",
+    "Don't hesitate to throw away the clumsy parts and rebuild them",
+    "Write programs that do one thing and do it well",
+    "Write programs to work together",
+    "Write programs to handle text streams, because that is a universal interface",
+    "Keep it Simple, Stupid",
+    "Do One Thing and Do It Well",
+    "Small is beautiful",
+    "Build a prototype as soon as possible",
+    "Choose portability over efficiency",
+    "Store data in flat text files",
+    "Use software leverage to your advantage",
+    "Use shell scripts to increase leverage and portability",
+    "Avoid captive user interfaces",
+    "Make every program a filter"
+  ).map{ text => s"UNIX reminds: $text" }
+
   val AllSentences = Seq(
     (":yoda-with-eyes:", Yoda),
     (":nitro:", TheNitroWay),
     (":doge:", Funny),
-    (":chucknorris:", ChuckNorris)
+    (":chucknorris:", ChuckNorris),
+    (":unix:", UnixQuotes)
   )
 
 }
