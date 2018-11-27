@@ -8,6 +8,7 @@ import conf.SingularityConf
 import io.circe.generic.auto._
 import org.ocpsoft.prettytime.PrettyTime
 import util.HttpIO
+import scala.util.matching.Regex
 
 import scala.concurrent.duration._
 
@@ -212,6 +213,9 @@ class SingularityHandlerImpl(val conf: SingularityConf, val httpIO: HttpIO)
     (addedChanges ++ removedChanges ++ changes).toList
   }
 
+
+  private val EnvVarRegex: Regex = "^([^=]+)=(.+)?$".r
+
   /** Extract Docker Env:
     * input format: {key = "env", value = "JAVA_OPTS=-Xmx128"}
     * output {key="JAVA_OPTS", value="-Xmx128"}
@@ -221,10 +225,11 @@ class SingularityHandlerImpl(val conf: SingularityConf, val httpIO: HttpIO)
     params
       .filter(_.key == "env")
       .map(_.value)
-      .map { value =>
-        (value.split("=")(0), value.split("=")(1))
-      }
-      .toMap
+      .flatMap {
+        case EnvVarRegex(k, null) => Seq(k -> "<empty>")
+        case EnvVarRegex(k, v) => Seq(k -> v)
+        case _ => Nil
+      }.toMap
   }
 
 }
