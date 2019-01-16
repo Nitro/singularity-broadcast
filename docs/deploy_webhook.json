@@ -1,0 +1,5 @@
+{
+  "id": "deploy-webhook",
+  "uri": "http://192.168.1.4:8080/singularity/webhook/deploy",
+  "type": "DEPLOY"
+}
