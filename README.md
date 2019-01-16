@@ -7,7 +7,19 @@ Process Singularity events and sends a custom messages to Slack and a Deploy Rep
 
 ![NewRelic](docs/img/newrelic.png)
 
-Note: Project implemented using `scala cats` and `scala-effect` just to experiment with it.
+
+Warning, this project is in very early stage, it was developed as a internal HackWeek at Nitro
+and it still needs some customization/changes to be used as a generic notification tool outside Nitro.
+
+# Run it locally
+
+Edit `src/main/resources/application.conf` and run `sbt run`
+
+```
+curl -i -H "Content-Type: application/json" \
+ -X POST http://localhost:8080/singularity/webhook/deploy \
+ -d@docs/1_deploy_starting.json
+```
 
 # Release
 
@@ -19,10 +31,11 @@ nmesos release singularity-broadcast -e prod -t 0.0.6-SNAPSHOT --dryrun false
 
 # Register the WebHook
 
-`http://prod-singularity.uw2.nitro.us/singularity/webhooks` and `http://dev-singularity.uw2.nitro.us/singularity/webhooks` 
+You must register the webhook at
+`http://<<Singularity Url>>/singularity/webhooks`
 
-```
-curl -i -X POST -H "Content-Type: application/json" -d@deploy_webhook_dev.json \
-http://dev-singularity.uw2.nitro.us/singularity/api/webhooks
-```
+
+# Stack
+
+Project implemented using `scala`, `cats` and `scala-effect`.
 

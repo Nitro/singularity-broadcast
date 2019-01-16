@@ -1,0 +1,63 @@
+{
+  "deployMarker": {
+    "requestId": "dev_play_nitro_scala_server",
+    "deployId": "20170424T151428_1",
+    "timestamp": 1508277086839,
+    "user": "test"
+  },
+  "deploy": {
+    "requestId": "dev_play_nitro_scala_server",
+    "id": "20170424T151428_1",
+    "containerInfo": {
+      "type": "DOCKER",
+      "volumes": [],
+      "docker": {
+        "image": "gonitro/play-nitro-scala-server:20170424T151428",
+        "privileged": false,
+        "network": "BRIDGE",
+        "portMappings": [
+          {
+            "containerPortType": "LITERAL",
+            "containerPort": 9000,
+            "hostPortType": "FROM_OFFER",
+            "hostPort": 0,
+            "protocol": "tcp"
+          }
+        ],
+        "forcePullImage": false,
+        "dockerParameters": [
+          {
+            "key": "label",
+            "value": "ServiceName=play-nitro-scala"
+          },
+          {
+            "key": "label",
+            "value": "EnvironmentName=dev"
+          },
+          {
+            "key": "env",
+            "value": "JAVA_OPTS=-Xmx128m -Xms128m -Dlogger.file=conf/docker-logback.xml"
+          },
+          {
+            "key": "env",
+            "value": "NEW_RELIC_APP_NAME=play-nitro-scala"
+          }
+        ]
+      }
+    },
+    "resources": {
+      "cpus": 0.1,
+      "memoryMb": 200.0,
+      "numPorts": 1,
+      "diskMb": 0.0
+    },
+    "healthcheckUri": "/health",
+    "healthcheck": {
+      "uri": "/health"
+    },
+    "deployInstanceCountPerStep": 1,
+    "deployStepWaitTimeMs": 10000,
+    "autoAdvanceDeploySteps": true
+  },
+  "eventType": "STARTING"
+}
