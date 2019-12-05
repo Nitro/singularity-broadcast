@@ -1,6 +1,6 @@
 # Singularity web-hook broadcast
 
-Process Singularity events and sends a custom messages to Slack and a Deploy Report to NewRelic
+Process [Singularity Mesos](https://getsingularity.com/) events and sends a custom messages to Slack and a Deploy Report to NewRelic
 
 ![Slack](docs/img/slack.png)
 
